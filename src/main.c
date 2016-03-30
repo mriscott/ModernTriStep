@@ -56,6 +56,9 @@ unsigned int hour_angle_anim = 0;
 #define TS 1
 // Total Steps Default (TSD)
 #define TSD 1
+
+#define LH 2
+#define LHD 24
  
 // Timer used to determine next step check
 //static AppTimer *timer;
@@ -262,11 +265,7 @@ void draw_date() {
 	time_t now = time(NULL);
 	struct tm *t = localtime(&now);
   
-  if (strcmp(locale, "de_DE")==0){
-	  strftime(date_text, sizeof(date_text), "%a %d.%m.%y", t);
-  }else{
-    strftime(date_text, sizeof(date_text), "%a %m/%d/%y", t);
-  }
+  strftime(date_text, sizeof(date_text), "%a %d", t);
 
 	text_layer_set_text(date_layer, date_text);
 }
@@ -343,7 +342,7 @@ void init() {
 	layer_add_child(window_layer, background_layer);
 
 	// Date setup
-	date_layer = text_layer_create(GRect(27, 100, 90, 21));
+	date_layer = text_layer_create(GRect(27, 87, 100, 21));
 	text_layer_set_text_color(date_layer, GColorWhite);
 	text_layer_set_text_alignment(date_layer, GTextAlignmentCenter);
 	text_layer_set_background_color(date_layer, GColorClear);
@@ -356,16 +355,16 @@ void init() {
 	text_layer_set_text_alignment(dig_time_layer, GTextAlignmentCenter);
 	text_layer_set_background_color(dig_time_layer, GColorClear);
 	text_layer_set_font(dig_time_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-	layer_add_child(window_layer, text_layer_get_layer(dig_time_layer));
+	//layer_add_child(window_layer, text_layer_get_layer(dig_time_layer));
 
 	draw_date();
   
   // Steps setup
-	steps_layer = text_layer_create(GRect(27, 22, 90, 21));
+	steps_layer = text_layer_create(GRect(27, 26, 90, 21));
 	text_layer_set_text_color(steps_layer, GColorWhite);
 	text_layer_set_text_alignment(steps_layer, GTextAlignmentCenter);
 	text_layer_set_background_color(steps_layer, GColorClear);
-	text_layer_set_font(steps_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+	text_layer_set_font(steps_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
 	layer_add_child(window_layer, text_layer_get_layer(steps_layer));
   
   static char buf[] = "123456890abcdefghijkl";
@@ -744,6 +743,7 @@ static void in_recv_handler(DictionaryIterator *iterator, void *context)
 void deinit() {
   //totalSteps += pedometerCount;
 	persist_write_int(TS, pedometerCount); // save steps on exit
+	persist_write_int(LH, lastHour); // save steps on exit
 	window_destroy(window);
 	gbitmap_destroy(background_image_container);
 	gbitmap_destroy(icon_battery);
@@ -786,6 +786,7 @@ int main(void) {
   
   //Get saved data...
   pedometerCount = persist_exists(TS) ? persist_read_int(TS) : TSD;
+  lastHour = persist_exists(LH) ? persist_read_int(LH) : LHD;
   showSteps = persist_exists(SHOW_STEPS) ? persist_read_bool(SHOW_STEPS) : true ;
 	stepsUpdateInterval = persist_exists(UPDATE_INTERVAL) ? persist_read_int(UPDATE_INTERVAL) : 10 ;
   showBattery = persist_exists(SHOW_BATTERY) ? persist_read_bool(SHOW_BATTERY) : true ;
