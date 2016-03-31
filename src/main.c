@@ -563,7 +563,7 @@ void update_ui_callback() {
 
 		
     // steps
-    if (secondsTillStepsUpdate >= stepsUpdateInterval && pedometerCount != lastPedometerCount ){
+    if ( pedometerCount % 1000 == 0 || (secondsTillStepsUpdate >= stepsUpdateInterval && pedometerCount != lastPedometerCount )){
   		static char buf[] = "123456890abcdefghijkl";
   		snprintf(buf, sizeof(buf), "%ld", pedometerCount);
   		text_layer_set_text(steps_layer, buf);
@@ -571,9 +571,8 @@ void update_ui_callback() {
       lastPedometerCount = pedometerCount;
     }
 
-		if (stepGoal > 0 && pedometerCount == stepGoal) {
+		if (pedometerCount % 1000 == 0) {
 			vibes_long_pulse();
-			
 		}
 	}
 
@@ -698,7 +697,6 @@ static void in_recv_handler(DictionaryIterator *iterator, void *context)
       
     case UPDATE_INTERVAL:
       stepsUpdateInterval = t->value->uint32;
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "Interaval: %d", (int)stepsUpdateInterval);
       persist_write_int(UPDATE_INTERVAL, stepsUpdateInterval);
     
       break;
@@ -787,6 +785,17 @@ int main(void) {
   //Get saved data...
   pedometerCount = persist_exists(TS) ? persist_read_int(TS) : TSD;
   lastHour = persist_exists(LH) ? persist_read_int(LH) : LHD;
+  
+  // check for reset
+ 
+        time_t now = time(NULL);
+        struct tm *t = localtime(&now);
+
+  if ( t->tm_hour < lastHour){
+    pedometerCount = 0;
+  }
+  
+
   showSteps = persist_exists(SHOW_STEPS) ? persist_read_bool(SHOW_STEPS) : true ;
 	stepsUpdateInterval = persist_exists(UPDATE_INTERVAL) ? persist_read_int(UPDATE_INTERVAL) : 10 ;
   showBattery = persist_exists(SHOW_BATTERY) ? persist_read_bool(SHOW_BATTERY) : true ;
