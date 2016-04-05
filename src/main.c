@@ -342,7 +342,7 @@ void init() {
 	layer_add_child(window_layer, background_layer);
 
 	// Date setup
-	date_layer = text_layer_create(GRect(27, 87, 100, 21));
+	date_layer = text_layer_create(GRect(22, 87, 100, 21));
 	text_layer_set_text_color(date_layer, GColorWhite);
 	text_layer_set_text_alignment(date_layer, GTextAlignmentCenter);
 	text_layer_set_background_color(date_layer, GColorClear);
@@ -741,7 +741,7 @@ static void in_recv_handler(DictionaryIterator *iterator, void *context)
 void deinit() {
   //totalSteps += pedometerCount;
 	persist_write_int(TS, pedometerCount); // save steps on exit
-	persist_write_int(LH, lastHour); // save steps on exit
+	persist_write_int(LH, lastHour); // save last update time on exit
 	window_destroy(window);
 	gbitmap_destroy(background_image_container);
 	gbitmap_destroy(icon_battery);
