@@ -130,6 +130,10 @@ uint32_t stepsUpdateInterval = 30; // in seconds;
 #define UPDATE_INTERVAL 2
 #define SHOW_BATTERY 3
 
+
+void info_mode();
+void watch_mode();
+
 void handle_timer(void* vdata) {
 
 	int *data = (int *) vdata;
@@ -606,6 +610,7 @@ void update_ui_callback() {
     }
 
 		if (pedometerCount % 2000 == 0) {
+			info_mode();
 			vibes_long_pulse();
 		}
 	}
@@ -890,7 +895,7 @@ int main(void) {
   update_from_settings();
   
 
-  //display_timer = app_timer_register(500, info_mode, NULL);
+  watch_mode();
   app_event_loop();
   deinit();
 }
