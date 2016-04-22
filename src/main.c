@@ -935,12 +935,6 @@ int main(void) {
   
 
   watch_mode();
-
-
-  info_mode();
-  showYesterdaysSteps();
-  delayed_message_timer = app_timer_register(2500, showMaxSteps, NULL);
-
   app_event_loop();
   deinit();
 }
