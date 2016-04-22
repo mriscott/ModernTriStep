@@ -40,6 +40,8 @@ static AppTimer *timer_handle;
 
 static AppTimer *display_timer;
 
+static AppTimer *delayed_message_timer;
+
 #define COOKIE_MY_TIMER 1
 static int my_cookie = COOKIE_MY_TIMER;
 #define ANIM_IDLE 0
@@ -70,6 +72,11 @@ unsigned int hour_angle_anim = 0;
 #define YSD 0
 
 
+// MAX steps (KEY)
+#define MS 4
+#define MSD 0
+
+
 // Timer used to determine next step check
 //static AppTimer *timer;
 
@@ -95,7 +102,8 @@ int sensitivity = 1;
 
 long stepGoal = 8000;
 long pedometerCount = 0;
-long yesterdaysSteps = 100;
+long yesterdaysSteps = 0;
+long maxSteps = 0;
 long lastPedometerCount = 0;
 long caloriesBurned = 0;
 long tempTotal = 0;
@@ -134,6 +142,8 @@ uint32_t stepsUpdateInterval = 30; // in seconds;
 
 void info_mode();
 void watch_mode();
+void message(char *msg);
+void display_info(bool x);
 
 void handle_timer(void* vdata) {
 
@@ -610,6 +620,11 @@ void update_ui_callback() {
       lastPedometerCount = pedometerCount;
     }
 
+    if(maxSteps!=0 && pedometerCount > maxSteps) {
+    	message("High Score");
+    	maxSteps=0;
+    }
+
 		if (pedometerCount % 2000 == 0) {
 			info_mode();
 			if (pedometerCount>=10000) {
@@ -681,10 +696,16 @@ void update_from_settings(){
   
 }
 
-void updateYesterdaysSteps() {
+void showYesterdaysSteps() {
 	  static char buf[] = "123456890abcdefghijkl";
-	  snprintf(buf, sizeof(buf), "%ld", yesterdaysSteps);
-		text_layer_set_text(message_layer, buf);
+	  snprintf(buf, sizeof(buf), "Y:%ld", yesterdaysSteps);
+	  text_layer_set_text(message_layer, buf);
+}
+
+void showMaxSteps() {
+	  static char buf[] = "123456890abcdefghijkl";
+	  snprintf(buf, sizeof(buf), "M:%ld", maxSteps);
+	  text_layer_set_text(message_layer, buf);
 }
 
 void message(char *msg) {
@@ -692,7 +713,8 @@ void message(char *msg) {
 	text_layer_set_text(message_layer, msg);
 }
 
-void show_watch(bool x) {
+
+void display_info(bool x) {
 	  //layer_set_hidden(background_layer, x);
 	  layer_set_hidden(minute_display_layer, x);
 	  layer_set_hidden(hour_display_layer, x);
@@ -711,21 +733,20 @@ void show_watch(bool x) {
 
 	  if(x) {
 		  draw_dig_time();
-		  updateYesterdaysSteps();
 	  }
 	  update_ui_callback();
 	  draw_date();
-
-
 }
 
-void watch_mode(){
-	show_watch(false);
+void watch_mode() {
+	display_info(false);
 }
+
 
 void info_mode() {
   app_timer_cancel(display_timer);
-  show_watch(true);
+  app_timer_cancel(delayed_message_timer);
+  display_info(true);
   display_timer = app_timer_register(5000, watch_mode, NULL);
 }
 
@@ -739,7 +760,8 @@ void accel_tap_handler(AccelAxisType axis, int32_t direction) {
   //  text_layer_set_text(steps_layer, "TAP :)");
   //}
   info_mode();
-
+  showYesterdaysSteps();
+  delayed_message_timer = app_timer_register(2500, showMaxSteps, NULL);
 }
 
 /*
@@ -842,7 +864,8 @@ void deinit() {
 	app_timer_cancel(display_timer);
 	persist_write_int(TS, pedometerCount); // save steps on exit
 	persist_write_int(LH, lastHour); // save last update time on exit
-	persist_write_int(YS, yesterdaysSteps); // save last update time on exit
+	persist_write_int(YS, yesterdaysSteps);
+	persist_write_int(MS, maxSteps);
 	window_destroy(window);
 	gbitmap_destroy(background_image_container);
 	gbitmap_destroy(icon_battery);
@@ -888,6 +911,7 @@ int main(void) {
   //Get saved data...
   pedometerCount = persist_exists(TS) ? persist_read_int(TS) : TSD;
   yesterdaysSteps = persist_exists(YS) ? persist_read_int(YS) : YSD;
+  maxSteps = persist_exists(MS) ? persist_read_int(MS) : MSD;
   lastHour = persist_exists(LH) ? persist_read_int(LH) : LHD;
   
   // check for reset
@@ -897,6 +921,9 @@ int main(void) {
 
   if ( t->tm_hour < lastHour){
 	yesterdaysSteps = pedometerCount;
+	if(yesterdaysSteps>maxSteps) {
+		maxSteps=yesterdaysSteps;
+	}
     pedometerCount = 0;
   }
   
@@ -908,6 +935,12 @@ int main(void) {
   
 
   watch_mode();
+
+
+  info_mode();
+  showYesterdaysSteps();
+  delayed_message_timer = app_timer_register(2500, showMaxSteps, NULL);
+
   app_event_loop();
   deinit();
 }
