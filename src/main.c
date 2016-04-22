@@ -704,6 +704,9 @@ void showYesterdaysSteps() {
 
 void showMaxSteps() {
 	  static char buf[] = "123456890abcdefghijkl";
+	  // check we update before we display
+	  if(yesterdaysSteps>maxSteps) maxSteps = yesterdaysSteps;
+	  if(pedometerCount>maxSteps) maxSteps = pedometerCount;
 	  snprintf(buf, sizeof(buf), "M:%ld", maxSteps);
 	  text_layer_set_text(message_layer, buf);
 }
