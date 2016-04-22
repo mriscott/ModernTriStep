@@ -68,7 +68,8 @@ unsigned int hour_angle_anim = 0;
 // Yesterday's steps (KEY)
 #define YS 3
 #define YSD 0
- 
+
+
 // Timer used to determine next step check
 //static AppTimer *timer;
 
@@ -611,6 +612,12 @@ void update_ui_callback() {
 
 		if (pedometerCount % 2000 == 0) {
 			info_mode();
+			if (pedometerCount>=10000) {
+				message("Good job");
+			}
+			else {
+				message("Keep going");
+			}
 			vibes_long_pulse();
 		}
 	}
@@ -678,6 +685,11 @@ void updateYesterdaysSteps() {
 	  static char buf[] = "123456890abcdefghijkl";
 	  snprintf(buf, sizeof(buf), "%ld", yesterdaysSteps);
 		text_layer_set_text(message_layer, buf);
+}
+
+void message(char *msg) {
+	info_mode();
+	text_layer_set_text(message_layer, msg);
 }
 
 void show_watch(bool x) {
