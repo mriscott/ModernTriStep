@@ -863,6 +863,7 @@ void deinit() {
 
 	app_timer_cancel(display_timer);
   app_timer_cancel(delayed_message_timer);
+  app_timer_cancel(timer_handle);
 	persist_write_int(TS, pedometerCount); // save steps on exit
 	persist_write_int(LH, lastHour); // save last update time on exit
 	persist_write_int(YS, yesterdaysSteps);
