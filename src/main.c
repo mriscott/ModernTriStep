@@ -621,17 +621,17 @@ void update_ui_callback() {
     }
 
     if(maxSteps!=0 && pedometerCount > maxSteps) {
-    	message("High Score");
+    	message("New High");
     	maxSteps=0;
     }
 
 		if (pedometerCount % 2000 == 0) {
 			info_mode();
 			if (pedometerCount>=10000) {
-				message("Good job");
+				message("Good Job");
 			}
 			else {
-				message("Keep going");
+				message("Keep Going");
 			}
 			vibes_long_pulse();
 		}
@@ -862,6 +862,7 @@ void deinit() {
   //totalSteps += pedometerCount;
 
 	app_timer_cancel(display_timer);
+  app_timer_cancel(delayed_message_timer);
 	persist_write_int(TS, pedometerCount); // save steps on exit
 	persist_write_int(LH, lastHour); // save last update time on exit
 	persist_write_int(YS, yesterdaysSteps);
