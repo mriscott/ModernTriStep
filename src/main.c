@@ -76,6 +76,10 @@ unsigned int hour_angle_anim = 0;
 #define MS 4
 #define MSD 0
 
+// Strings for messages
+static char KEEP_GOING[]="Keep Going";
+static char GOOD_JOB[]="Good Job";
+static char NEW_HIGH[]="New High";
 
 // Timer used to determine next step check
 //static AppTimer *timer;
@@ -621,17 +625,17 @@ void update_ui_callback() {
     }
 
     if(maxSteps!=0 && pedometerCount > maxSteps) {
-    	message("New High");
+    	message(NEW_HIGH);
     	maxSteps=0;
     }
 
 		if (pedometerCount % 2000 == 0) {
 			info_mode();
 			if (pedometerCount>=10000) {
-				message("Good Job");
+				message(GOOD_JOB);
 			}
 			else {
-				message("Keep Going");
+				message(KEEP_GOING);
 			}
 			vibes_long_pulse();
 		}
