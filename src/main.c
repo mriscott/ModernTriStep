@@ -54,6 +54,8 @@ int init_anim = ANIM_DONE;
 int32_t second_angle_anim = 0;
 unsigned int minute_angle_anim = 0;
 unsigned int hour_angle_anim = 0;
+
+static bool info_mode_showing=false;
 /*
  * Permanent storage variables
  */
@@ -743,15 +745,21 @@ void display_info(bool x) {
 }
 
 void watch_mode() {
+    if(info_mode_showing) {
+        info_mode_showing=false;
 	display_info(false);
+    }
 }
 
 
 void info_mode() {
-  app_timer_cancel(display_timer);
-  app_timer_cancel(delayed_message_timer);
-  display_info(true);
-  display_timer = app_timer_register(5000, watch_mode, NULL);
+    if(!info_mode_showing) {
+        info_mode_showing=true;
+        app_timer_cancel(display_timer);
+        app_timer_cancel(delayed_message_timer);
+        display_info(true);
+        display_timer = app_timer_register(5000, watch_mode, NULL);
+    }
 }
 
 /*
@@ -939,7 +947,9 @@ int main(void) {
   showBattery = persist_exists(SHOW_BATTERY) ? persist_read_bool(SHOW_BATTERY) : true ;
   update_from_settings();
   
-
+  // set info mode as showing so the proceeding call to watch_mode sets
+  // visibility for all components correctly
+  info_mode_showing=true;
   watch_mode();
   app_event_loop();
   deinit();
