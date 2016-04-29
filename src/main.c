@@ -710,7 +710,7 @@ void showYesterdaysSteps() {
 
 void showMaxSteps() {
 	  static char buf[] = "123456890abcdefghijkl";
-	  snprintf(buf, sizeof(buf), "M:%ld", maxSteps);
+	  snprintf(buf, sizeof(buf), "M:%ld", maxSteps==0?pedometerCount:maxSteps);
 	  text_layer_set_text(message_layer, buf);
 }
 
