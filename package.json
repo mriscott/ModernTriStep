@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "author": "Iron Geek",
+  "private": true,
+  "dependencies": {},
+  "keywords": [
+    "pebble-app"
+  ],
+  "pebble": {
+    "sdkVersion": "3",
+    "resources": {
+      "media": [
+        {
+          "menuIcon": true,
+          "type": "png",
+          "name": "IMAGE_MENU_ICON",
+          "file": "images/modern_logo.png"
+        },
+        {
+          "type": "png",
+          "name": "BLUETOOTH",
+          "file": "images/bluetooth.png"
+        },
+        {
+          "type": "png",
+          "name": "BATTERY_CHARGE",
+          "file": "images/battery-charge.png"
+        },
+        {
+          "type": "png",
+          "name": "BATTERY_ICON",
+          "file": "images/battery_icon.png"
+        },
+        {
+          "type": "png",
+          "name": "IMAGE_BACKGROUND",
+          "file": "images/modern_background_new.png"
+        }
+      ]
+    },
+    "projectType": "native",
+    "uuid": "698b3e04-b12e-4ff5-bfad-1be6bdeeb599",
+    "messageKeys": {
+      "SHOW_SECONDS": 1,
+      "UPDATE_INTERVAL": 2,
+      "SHOW_BATTERY": 3,
+      "SHOW_STEPS": 0
+    },
+    "enableMultiJS": false,
+    "displayName": "Modern Tri Step",
+    "watchapp": {
+      "onlyShownOnCommunication": false,
+      "hiddenApp": false,
+      "watchface": true
+    },
+    "targetPlatforms": [
+      "aplite",
+      "basalt"
+    ],
+    "capabilities": [
+      "health",
+      "configurable"
+    ]
+  },
+  "name": "Modern Step"
+}

@@ -114,7 +114,6 @@ long lastPedometerCount = 0;
 long caloriesBurned = 0;
 long tempTotal = 0;
 
-bool did_pebble_vibrate = false;
 bool validX, validY, validZ = false;
 bool SID;
 bool isDark;
@@ -547,76 +546,27 @@ void conserve_power(bool conserve) {
 	}
 }
 
-/*
- * Step Counter (Code basicly from https://github.com/jathusanT/pebble_pedometer)
- */
 
+void updatePedometerCount() {
+	APP_LOG(APP_LOG_LEVEL_INFO, "Pedometer updating");
 
+	HealthMetric metric = HealthMetricStepCount;
+	time_t start = time_start_of_today();
+	time_t end = time(NULL);
 
-void autoCorrectZ(){
-	if (Z_DELTA > YZ_DELTA_MAX){
-		Z_DELTA = YZ_DELTA_MAX; 
-	} else if (Z_DELTA < YZ_DELTA_MIN){
-		Z_DELTA = YZ_DELTA_MIN;
-	}
-}
-
-void autoCorrectY(){
-	if (Y_DELTA > YZ_DELTA_MAX){
-		Y_DELTA = YZ_DELTA_MAX; 
-	} else if (Y_DELTA < YZ_DELTA_MIN){
-		Y_DELTA = YZ_DELTA_MIN;
-	}
-}
-
-void pedometer_update() {
-	if (startedSession) {
-		X_DELTA_TEMP = abs(abs(currX) - abs(lastX));
-		if (X_DELTA_TEMP >= X_DELTA) {
-			validX = true;
-		}
-		Y_DELTA_TEMP = abs(abs(currY) - abs(lastY));
-		if (Y_DELTA_TEMP >= Y_DELTA) {
-			validY = true;
-			if (Y_DELTA_TEMP - Y_DELTA > 200){
-				autoCorrectY();
-				Y_DELTA = (Y_DELTA < YZ_DELTA_MAX) ? Y_DELTA + PED_ADJUST : Y_DELTA;
-			} else if (Y_DELTA - Y_DELTA_TEMP > 175){
-				autoCorrectY();
-				Y_DELTA = (Y_DELTA > YZ_DELTA_MIN) ? Y_DELTA - PED_ADJUST : Y_DELTA;
-			}
-		}
-		Z_DELTA_TEMP = abs(abs(currZ) - abs(lastZ));
-		if (Z_DELTA_TEMP >= Z_DELTA) {
-			validZ = true;
-			if (Z_DELTA_TEMP - Z_DELTA > 200){
-				autoCorrectZ();
-				Z_DELTA = (Z_DELTA < YZ_DELTA_MAX) ? Z_DELTA + PED_ADJUST : Z_DELTA;
-			} else if (Z_DELTA - Z_DELTA_TEMP > 175){
-				autoCorrectZ();
-				Z_DELTA = (Z_DELTA < YZ_DELTA_MAX) ? Z_DELTA + PED_ADJUST : Z_DELTA;
-			}
-		}
-	} else {
-		startedSession = true;
-	}
-}
-
-void resetUpdate() {
-	lastX = currX;
-	lastY = currY;
-	lastZ = currZ;
-	validX = false;
-	validY = false;
-	validZ = false;
-}
-
-void update_ui_callback() {
-	if ((validX && validY && !did_pebble_vibrate) || (validX && validZ && !did_pebble_vibrate)) {
-		pedometerCount++;
-		//tempTotal++;
-
-		
+	// Check the metric has data available for today
+	HealthServiceAccessibilityMask mask = health_service_metric_accessible(metric, 
+	  start, end);
+	
+	   if(mask & HealthServiceAccessibilityMaskAvailable){
+		   long prev = pedometerCount;
+		   pedometerCount = (long)health_service_sum_today(metric);
+		   if (prev==pedometerCount) return;
+	APP_LOG(APP_LOG_LEVEL_INFO, "Steps:%ld",pedometerCount);
+	   } else
+	   {
+	APP_LOG(APP_LOG_LEVEL_INFO, "No health data");
+	   }
     // steps
     if ( pedometerCount % 1000 == 0 || (secondsTillStepsUpdate >= stepsUpdateInterval && pedometerCount != lastPedometerCount )){
   		static char buf[] = "123456890abcdefghijkl";
@@ -641,42 +591,17 @@ void update_ui_callback() {
 			}
 			vibes_long_pulse();
 		}
-	}
+	
+}
 
-	resetUpdate();
+void update_ui_callback() {
+		updatePedometerCount();
 }
 
 
 
 void accel_data_handler(AccelData *accel_data, uint32_t num_samples) {
-  
-  uint32_t i;
-
- 			for (i=0;i<num_samples/3;i++){
-          uint32_t appo = i*3; 
-          AccelData accel = accel_data[appo];
-          if (!startedSession) {
-        		lastX = accel.x;
-        		lastY = accel.y;
-        		lastZ = accel.z;
-        	} else {
-        		currX = (accel_data[appo].x+accel_data[appo+1].x+accel_data[appo+2].x)/3;
-        		currY = (accel_data[appo].y+accel_data[appo+1].y+accel_data[appo+2].y)/3;//accel.y;
-        		currZ = (accel_data[appo].z+accel_data[appo+1].z+accel_data[appo+2].z)/3;//accel.z;
-        	}
-        	
-        	did_pebble_vibrate = accel.did_vibrate;
-        
-        	pedometer_update();
-					/*Zm=Zm+abs(accel_data[appo].z);
-
-					Ym=Ym+abs(accel_data[appo].y);
-
-					Xm=Xm+abs(accel_data[appo].x);
-          */
-  			}
-  update_ui_callback();
-}
+}  
 
 
 /*
