@@ -106,7 +106,6 @@ int X_DELTA_TEMP, Y_DELTA_TEMP, Z_DELTA_TEMP = 0;
 int lastX, lastY, lastZ, currX, currY, currZ = 0;
 int sensitivity = 1;
 
-long stepGoal = 8000;
 long pedometerCount = 0;
 long yesterdaysSteps = 0;
 long maxSteps = 0;
@@ -134,6 +133,7 @@ bool shouldUpdateSteps = false;
 bool usePowerSaving = true;
 bool showSteps = true;
 bool showBattery = true;
+bool btWarn=true;
 //bool showSeconds = false;
 uint32_t secondsTillStepsUpdate = 0;
 uint32_t stepsUpdateInterval = 30; // in seconds;
@@ -143,7 +143,7 @@ uint32_t stepsUpdateInterval = 30; // in seconds;
 #define SHOW_SECONDS 1
 #define UPDATE_INTERVAL 2
 #define SHOW_BATTERY 3
-
+#define BT_WARN 4
 
 void info_mode();
 void watch_mode();
@@ -252,6 +252,7 @@ void minute_display_layer_update_callback(Layer *me, GContext* ctx) {
 
 	gpath_draw_filled(ctx, minute_hand_path);
 	gpath_draw_outline(ctx, minute_hand_path);
+	updatePedometer();
 }
 
 void hour_display_layer_update_callback(Layer *me, GContext* ctx) {
@@ -362,6 +363,7 @@ void bt_layer_update_callback(Layer *layer, GContext *ctx) {
 }
 
 void bt_connection_handler(bool connected) {
+	if (bt_ok && !connected && btWarn) vibes_double_pulse();
 	bt_ok = connected;
 	layer_mark_dirty(bt_layer);
 }
@@ -547,8 +549,7 @@ void conserve_power(bool conserve) {
 }
 
 
-void updatePedometerCount() {
-	APP_LOG(APP_LOG_LEVEL_INFO, "Pedometer updating");
+void updatePedometer() {
 
 	HealthMetric metric = HealthMetricStepCount;
 	time_t start = time_start_of_today();
@@ -562,10 +563,6 @@ void updatePedometerCount() {
 		   long prev = pedometerCount;
 		   pedometerCount = (long)health_service_sum_today(metric);
 		   if (prev==pedometerCount) return;
-	APP_LOG(APP_LOG_LEVEL_INFO, "Steps:%ld",pedometerCount);
-	   } else
-	   {
-	APP_LOG(APP_LOG_LEVEL_INFO, "No health data");
 	   }
     // steps
     if ( pedometerCount % 1000 == 0 || (secondsTillStepsUpdate >= stepsUpdateInterval && pedometerCount != lastPedometerCount )){
@@ -594,9 +591,6 @@ void updatePedometerCount() {
 	
 }
 
-void update_ui_callback() {
-		updatePedometerCount();
-}
 
 
 
@@ -665,7 +659,7 @@ void display_info(bool x) {
 	  if(x) {
 		  draw_dig_time();
 	  }
-	  update_ui_callback();
+	  updatePedometer();
 	  draw_date();
 }
 
@@ -735,20 +729,20 @@ static void in_recv_handler(DictionaryIterator *iterator, void *context)
       }
       break;
       
-    case SHOW_SECONDS:
+    case BT_WARN:
       if(strcmp(t->value->cstring, "on") == 0)
       {
         //Set and save 
-        showSeconds = true;
+        btWarn = true;
  
-        persist_write_bool(SHOW_SECONDS, true);
+        persist_write_bool(BT_WARN, true);
       }
       else if(strcmp(t->value->cstring, "off") == 0)
       {
         //Set and save 
-        showSeconds = false;
+        btWarn = false;
         
-        persist_write_bool(SHOW_SECONDS, false);
+        persist_write_bool(BT_WARN, false);
       }
       break;
       
@@ -870,6 +864,7 @@ int main(void) {
   showSteps = persist_exists(SHOW_STEPS) ? persist_read_bool(SHOW_STEPS) : true ;
 		stepsUpdateInterval = persist_exists(UPDATE_INTERVAL) ? persist_read_int(UPDATE_INTERVAL) : 10 ;
   showBattery = persist_exists(SHOW_BATTERY) ? persist_read_bool(SHOW_BATTERY) : true ;
+  btWarn = persist_exists(BT_WARN) ? persist_read_bool(BT_WARN) : true ;
   update_from_settings();
   
   // set info mode as showing so the proceeding call to watch_mode sets
